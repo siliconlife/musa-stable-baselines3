@@ -9,7 +9,7 @@ from stable_baselines3.common.buffers import DictReplayBuffer, DictRolloutBuffer
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.type_aliases import DictReplayBufferSamples, ReplayBufferSamples
-from stable_baselines3.common.utils import get_device
+from stable_baselines3.common.utils import get_device, has_musa
 from stable_baselines3.common.vec_env import VecNormalize
 
 
@@ -110,8 +110,10 @@ def test_replay_buffer_normalization(replay_buffer_cls):
 
 
 @pytest.mark.parametrize("replay_buffer_cls", [DictReplayBuffer, DictRolloutBuffer, ReplayBuffer, RolloutBuffer])
-@pytest.mark.parametrize("device", ["cpu", "cuda", "auto"])
+@pytest.mark.parametrize("device", ["cpu", "musa" if has_musa else "cuda", "auto"])
 def test_device_buffer(replay_buffer_cls, device):
+    if device == "musa" and not th.musa.is_available():
+        pytest.skip("MUSA not available")
     if device == "cuda" and not th.cuda.is_available():
         pytest.skip("CUDA not available")
 

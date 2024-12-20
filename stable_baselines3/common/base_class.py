@@ -31,6 +31,7 @@ from stable_baselines3.common.utils import (
     get_system_info,
     set_random_seed,
     update_learning_rate,
+    has_musa,
 )
 from stable_baselines3.common.vec_env import (
     DummyVecEnv,
@@ -565,7 +566,7 @@ class BaseAlgorithm(ABC):
         """
         if seed is None:
             return
-        set_random_seed(seed, using_cuda=self.device.type == th.device("cuda").type)
+        set_random_seed(seed, using_cuda=self.device.type == th.device("musa" if has_musa else "cuda").type)
         self.action_space.seed(seed)
         # self.env is always a VecEnv
         if self.env is not None:

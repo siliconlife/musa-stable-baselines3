@@ -16,6 +16,13 @@ from gymnasium import spaces
 
 import stable_baselines3 as sb3
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = th.musa.is_available()
+except ImportError:
+    pass
+
 # Check if tensorboard is available for pytorch
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -42,8 +49,12 @@ def set_random_seed(seed: int, using_cuda: bool = False) -> None:
 
     if using_cuda:
         # Deterministic operations for CuDNN, it may impact performances
-        th.backends.cudnn.deterministic = True
-        th.backends.cudnn.benchmark = False
+        if has_musa:
+            th.backends.mudnn.deterministic = True
+            th.backends.mudnn.benchmark = False
+        else:
+            th.backends.cudnn.deterministic = True
+            th.backends.cudnn.benchmark = False
 
 
 # From stable baselines
@@ -149,11 +160,13 @@ def get_device(device: Union[th.device, str] = "auto") -> th.device:
     """
     # Cuda by default
     if device == "auto":
-        device = "cuda"
+        device = "musa" if has_musa else "cuda"
     # Force conversion to th.device
     device = th.device(device)
 
     # Cuda not available
+    if device.type == th.device("musa").type and not th.musa.is_available():
+        return th.device("cpu")
     if device.type == th.device("cuda").type and not th.cuda.is_available():
         return th.device("cpu")
 

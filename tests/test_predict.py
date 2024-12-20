@@ -7,7 +7,7 @@ from gymnasium import spaces
 from stable_baselines3 import A2C, DQN, PPO, SAC, TD3
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.envs import IdentityEnv
-from stable_baselines3.common.utils import get_device
+from stable_baselines3.common.utils import get_device, has_musa
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 MODEL_LIST = [
@@ -58,8 +58,10 @@ def test_auto_wrap(model_class):
 
 @pytest.mark.parametrize("model_class", MODEL_LIST)
 @pytest.mark.parametrize("env_id", ["Pendulum-v1", "CartPole-v1"])
-@pytest.mark.parametrize("device", ["cpu", "cuda", "auto"])
+@pytest.mark.parametrize("device", ["cpu", "musa" if has_musa else "cuda", "auto"])
 def test_predict(model_class, env_id, device):
+    if device == "musa" and not th.musa.is_available():
+        pytest.skip("MUSA not available")
     if device == "cuda" and not th.cuda.is_available():
         pytest.skip("CUDA not available")
 

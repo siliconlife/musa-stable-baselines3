@@ -6,6 +6,7 @@ import torch as th
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
+from stable_baselines3.common.utils import has_musa
 
 normal_action_noise = NormalActionNoise(np.zeros(1), 0.1 * np.ones(1))
 
@@ -242,5 +243,5 @@ def test_ppo_warnings():
     with pytest.warns(UserWarning, match="You are trying to run PPO on the GPU"):
         model = PPO("MlpPolicy", "Pendulum-v1")
         # Pretend to be on the GPU
-        model.device = th.device("cuda")
+        model.device = th.device("musa" if has_musa else "cuda")
         model._maybe_recommend_cpu()
